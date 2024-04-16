@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "API Cache Handler",
+  "version": "1.0",
+  "description": "Use cache when API requests fail.",
+  "permissions": [
+    "activeTab", "scripting",
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "tabs",
+    "activeTab",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["scripts/content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_icon": "images/hello_extensions.png",
+    "default_popup": "popup/popup.html",
+    "default_title": "API Cache Handler"
+  }
+}
