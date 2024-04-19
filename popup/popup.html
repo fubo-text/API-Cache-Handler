@@ -7,9 +7,16 @@
   <link rel="stylesheet" href="./popup.css"></link>
 </head>
 <body>
-  <div>
+  <div class="popup">
     <div id="pageTitle">加载中...</div>
-    <div id="text">说明：当页面接口正常时，会缓存数据；当接口报错时，会返回缓存数据，接口正常使用</div>
+    <label class="switch">
+      <input type="checkbox" id="toggleSwitch">
+      <span class="slider round"></span>
+    </label>
+    <div id="simpleApi" class="text-input">
+      <p>请输入地址：</p>
+       <input type="text" id="simpleTextInput" placeholder="请输入内容">
+    </div>
   </div>
   <script src="../scripts/popup.js"></script>
 </body>

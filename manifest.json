@@ -4,29 +4,21 @@
   "version": "1.0",
   "description": "Use cache when API requests fail.",
   "permissions": [
-    "activeTab", "scripting",
     "storage",
-    "webRequest",
-    "webRequestBlocking",
-    "tabs",
-    "activeTab",
-    "<all_urls>"
+    "scripting"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "service_worker.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["scripts/content.js"],
-      "run_at": "document_end"
-    }
-  ],
   "web_accessible_resources": [
     {
       "resources": ["inject.js"],
       "matches": ["<all_urls>"]
     }
+  ],
+  "host_permissions": [
+    "http://*/",
+    "https://*/"
   ],
   "action": {
     "default_icon": "images/hello_extensions.png",

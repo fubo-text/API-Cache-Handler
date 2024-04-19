@@ -1,5 +1,13 @@
+.popup{
+  display: flex;
+  width: 200px;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  justify-content: center;
+}
+
 #pageTitle {
-  width: 120px;
   text-align: center;
   cursor: pointer;
   font-weight: 600;
@@ -11,6 +19,75 @@
   font-size: 12px;
 }
 
+#simpleTextInput{
+  width: 160px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgb(185, 185, 186);
+  padding: 6px 6px;
+}
+
+p {
+  margin-bottom: 4px;
+}
+
 body {
   padding: 10px;
+}
+
+/* 开关整体样式 */
+.switch {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 10px;
+  width: 40px;  /* 宽度 */
+  height: 24px; /* 高度 */
+}
+
+/* 隐藏默认的checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* 滑块样式 */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc; /* 默认背景颜色 */
+  transition: .4s; /* 动画过渡效果 */
+  border-radius: 34px;  /* 圆角边缘 */
+}
+
+/* 滑块滑动时的颜色 */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;  /* 滑块高度 */
+  width: 20px;   /* 滑块宽度 */
+  left: 2px;
+  bottom: 2px;
+  background-color: white; /* 滑块颜色 */
+  transition: .4s;
+  border-radius: 50%; /* 圆形滑块 */
+}
+
+/* 检查input被选中时滑块的颜色 */
+input:checked + .slider {
+  background-color: #2196F3; /* 蓝色背景 */
+}
+
+/* 检查input被选中时滑块的位置 */
+input:checked + .slider:before {
+  transform: translateX(16px); /* 滑动配合宽度 */
+}
+
+/* 可选样式：指针悬停效果 */
+.slider:hover {
+  background-color: #7B7B7B;
 }
