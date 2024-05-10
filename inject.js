@@ -1,4 +1,4 @@
-(function() {
+(function () {
   class IndexedDBHelper {
     constructor(dbName, storeName, version) {
       this.dbName = dbName;
@@ -124,73 +124,89 @@
     var originalOpen = xhr.open;
     var requestUrl; // 用于保存请求的URL
 
-    xhr.open = function(method, url, async) {
+    xhr.open = function (method, url, async) {
       requestUrl = url; // 保存请求URL
       originalOpen.apply(this, arguments);
     };
 
-    xhr.onreadystatechange = async function() {
-      var cacheKey = "cache_" + requestUrl;
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          // 请求成功，缓存数据
-          let data = null;
-          if (xhr.responseType === "blob") {
-            console.log(xhr.response);
-            data = xhr.response;
-          } else {
-            data = xhr && xhr.responseText; // 假设响应是文本或JSON
-          }
-          if (!apiUrl) {
-            // 读取数据
-            checkedData(cacheKey, data);
-            // sessionStorage.setItem(cacheKey, JSON.stringify(data));
-          } else {
-            if (requestUrl.includes(apiUrl)) {
-              checkedData(cacheKey, data);
-              // sessionStorage.setItem(cacheKey, JSON.stringify(data));
-            }
-          }
+    const modifyResponse = async () => {
+      const cacheKey = "cache_" + requestUrl;
+      console.log(this, "this");
+      if (this.status >= 200 && this.status < 300) {
+        // 请求成功，缓存数据
+        let data = null;
+        if (xhr.responseType === "blob") {
+          console.log(xhr.response);
+          data = xhr.response;
         } else {
+          data = xhr && xhr.responseText; // 假设响应是文本或JSON
+        }
+        if (!apiUrl) {
           // 读取数据
-          const res = await dbHelper.get(cacheKey);
-          // 请求失败，尝试返回缓存的数据
-          var cachedData = res.data;
-          if (cachedData) {
-            Object.defineProperty(xhr, "status", { writable: true });
-            xhr.status = 200; // 假装请求成功了
-
-            Object.defineProperty(xhr, "readyState", { writable: true });
-            xhr.readyState = 4;
-
-            Object.defineProperty(xhr, "responseText", { value: cachedData });
-            Object.defineProperty(xhr, "response", { value: cachedData });
-
-            // 确保回调仍然可以被调用
-            if (typeof xhr.onreadystatechange === "function") {
-              xhr.onreadystatechange.call(xhr);
-            }
-            return; // 阻止继续调用原回调函数
+          checkedData(cacheKey, data);
+        } else {
+          if (requestUrl.includes(apiUrl)) {
+            checkedData(cacheKey, data);
           }
         }
-      }
-
-      if (typeof originalOnReadyStateChange === "function") {
-        originalOnReadyStateChange.apply(this, arguments);
+      } else {
+        // 读取数据
+        const res = await dbHelper.get(cacheKey);
+        // 请求失败，尝试返回缓存的数据
+        const cachedData = res?.data;
+        if (!!cachedData) {
+          console.log(cachedData);
+          this.status = 200; // 假装请求成功了
+          this.responseText = cachedData;
+          this.response = cachedData;
+          this.statusText = cachedData;
+        }
       }
     };
 
-    var originalOnReadyStateChange;
-    Object.defineProperty(xhr, "onreadystatechange", {
-      get: function() {
-        return originalOnReadyStateChange;
-      },
-      set: function(value) {
-        originalOnReadyStateChange = value;
-      },
-    });
+    for (let attr in xhr) {
+      if (attr === "onreadystatechange") {
+        xhr.onreadystatechange = async (...args) => {
+          if (this.readyState === 4) {
+            // 请求成功
+            await modifyResponse();
+          }
+          this.onreadystatechange && this.onreadystatechange.apply(this, args);
+        };
+        this.onreadystatechange = null;
+        continue;
+      } else if (attr === "onload") {
+        xhr.onload = async (...args) => {
+          // 请求成功
+          await modifyResponse();
+          this.onload && this.onload.apply(this, args);
+        };
+        this.onload = null;
+        continue;
+      }
 
-    return xhr;
+      if (typeof xhr[attr] === "function") {
+        this[attr] = xhr[attr].bind(xhr);
+      } else {
+        // responseText和response不是writeable的，但拦截时需要修改它，所以修改就存储在this[`_${attr}`]上
+        if (
+          ["responseText", "response", "status", "statusText"].includes(attr)
+        ) {
+          Object.defineProperty(this, attr, {
+            get: () =>
+              this[`_${attr}`] == undefined ? xhr[attr] : this[`_${attr}`],
+            set: (val) => (this[`_${attr}`] = val),
+            enumerable: true,
+          });
+        } else {
+          Object.defineProperty(this, attr, {
+            get: () => xhr[attr],
+            set: (val) => (xhr[attr] = val),
+            enumerable: true,
+          });
+        }
+      }
+    }
   }
 
   function modifiedFetch(resource, init) {
@@ -231,7 +247,7 @@
 
   window.addEventListener(
     "message",
-    function(event) {
+    function (event) {
       const data = event.data;
       if (data.type === "ajaxInterceptor") {
         apiUrl = data.value;
