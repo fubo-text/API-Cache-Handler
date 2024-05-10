@@ -121,16 +121,9 @@
   function ModifiedXHR() {
     console.log(11111);
     var xhr = new OriginalXHR();
-    var originalOpen = xhr.open;
-    var requestUrl; // 用于保存请求的URL
-
-    xhr.open = function (method, url, async) {
-      requestUrl = url; // 保存请求URL
-      originalOpen.apply(this, arguments);
-    };
 
     const modifyResponse = async () => {
-      const cacheKey = "cache_" + requestUrl;
+      const cacheKey = "cache_" + this.responseURL;
       console.log(this, "this");
       if (this.status >= 200 && this.status < 300) {
         // 请求成功，缓存数据
@@ -145,7 +138,7 @@
           // 读取数据
           checkedData(cacheKey, data);
         } else {
-          if (requestUrl.includes(apiUrl)) {
+          if (this.responseURL.includes(apiUrl)) {
             checkedData(cacheKey, data);
           }
         }
