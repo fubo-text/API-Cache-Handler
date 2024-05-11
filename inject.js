@@ -90,6 +90,22 @@
         this.db.close();
       }
     }
+    clearData() {
+      const { storeName } = this;
+      this.open().then((db) => {
+        var transaction = db.transaction([storeName], "readwrite");
+        var objectStore = transaction.objectStore(storeName);
+        var request = objectStore.clear();
+
+        request.onsuccess = function (e) {
+          console.log("Data cleared");
+        };
+
+        request.onerror = function (e) {
+          console.log("Error clearing data", e);
+        };
+      });
+    }
   }
 
   const dbHelper = new IndexedDBHelper("myDatabase", "myStore");
@@ -102,6 +118,9 @@
   let apiUrl = "";
 
   async function checkedData(url, data) {
+    if (!data) {
+      return;
+    }
     // 读取数据
     const result = await dbHelper.get(url);
     console.log("Data received:", result);
@@ -119,20 +138,17 @@
   }
 
   function ModifiedXHR() {
-    console.log(11111);
-    var xhr = new OriginalXHR();
+    const xhr = new OriginalXHR();
+    let _method = "";
 
     const modifyResponse = async () => {
-      const cacheKey = "cache_" + this.responseURL;
-      console.log(this, "this");
+      const url = this.responseURL?.split("?")[0];
+      const cacheKey = "cache_" + url + "_" + _method;
       if (this.status >= 200 && this.status < 300) {
         // 请求成功，缓存数据
         let data = null;
-        if (xhr.responseType === "blob") {
-          console.log(xhr.response);
-          data = xhr.response;
-        } else {
-          data = xhr && xhr.responseText; // 假设响应是文本或JSON
+        if (xhr.responseType === "" || xhr.responseType === "text") {
+          data = xhr.responseText; // 假设响应是文本或JSON
         }
         if (!apiUrl) {
           // 读取数据
@@ -148,7 +164,6 @@
         // 请求失败，尝试返回缓存的数据
         const cachedData = res?.data;
         if (!!cachedData) {
-          console.log(cachedData);
           this.status = 200; // 假装请求成功了
           this.responseText = cachedData;
           this.response = cachedData;
@@ -175,6 +190,19 @@
           this.onload && this.onload.apply(this, args);
         };
         this.onload = null;
+        continue;
+      } else if (attr === "open") {
+        this.open = (...args) => {
+          const [method] = args;
+          /** 将字符转换为小写 */
+          _method = method.toLowerCase();
+          xhr.open && xhr.open.apply(xhr, args);
+        };
+        continue;
+      } else if (attr === "send") {
+        this.send = (...args) => {
+          xhr.send && xhr.send.apply(xhr, args);
+        };
         continue;
       }
 
@@ -249,6 +277,7 @@
           window.XMLHttpRequest = ModifiedXHR;
           window.fetch = modifiedFetch;
         } else {
+          dbHelper.clearData();
           window.XMLHttpRequest = OriginalXHR;
           window.fetch = originalFetch;
         }
