@@ -22,7 +22,7 @@
   ],
   "action": {
     "default_icon": "images/hello_extensions.png",
-    "default_popup": "popup/popup.html",
+    "default_popup": "react-client/build/index.html",
     "default_title": "API Cache Handler"
   }
 }
