@@ -1,8 +1,11 @@
 import Replacer from "./components/Replacer";
+import './App.css';
 
 function App() {
   return (
-    <Replacer />
+    <div className="App">
+      <Replacer />
+    </div>
   );
 }
 
